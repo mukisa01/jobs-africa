@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+ Role {
+  STUDENT
+  CLIENT
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  NEEDS_INFO
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  REVIEWING
+  SHORTLISTED
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id                               Int                 @id @default(autoincrement())
+  email                            String              @unique
+  passwordHash                     String
+  fullName                         String
+  role                             Role                @default(STUDENT)
+  qualification                    String?
+  skills                           String?
+  experience                       String?
+  location                         String?
+  bio                              String?
+  verificationStatus               VerificationStatus @default(PENDING)
+  createdAt                        DateTime            @default(now())
+
+  Application  enum                    Application[]
+  Job                              Job[]
+  Message_Message_receiverIdToUser Message[]           @relation("Message_receiverIdToUser")
+  Message_Message_senderIdToUser   Message[]           @relation("Message_senderIdToUser")
+  VerificationRequest              VerificationRequest[]
+}
+
+model Application {
+  id              Int               @id @default(autoincrement())
+  referenceNumber String?           @unique
+  coverLetter     String
+  phone           String?
+  cvPath          String?
+  status          ApplicationStatus @default(SUBMITTED)
+  createdAt       DateTime          @default(now())
+  jobId           Int
+  applicantId     Int
+
+  User            User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  job             Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, applicantId])
+}
+
+model Job {
+  id            Int           @id @default(autoincrement())
+  title         String
+  description   String
+  category      String
+  skills        String
+  qualification String
+  location      String?
+  remote        Boolean       @default(true)
+  budget        String?
+  deadline      DateTime?
+  createdAt     DateTime      @default(now())
+  clientId      Int
+
+  applications  Application[]
+  User          User          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  createdAt  DateTime @default(now())
+  senderId   Int
+  receiverId Int
+
+  Message_receiverIdToUser User @relation("Message_receiverIdToUser", fields: [receiverId], references: [id], onDelete: Cascade)
+  Message_senderIdToUser   User @relation("Message_senderIdToUser", fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model VerificationRequest {
+  id         Int                @id @default(autoincrement())
+  proofPath  String
+  amount     String             @default("3 USD")
+  status     VerificationStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime           @default(now())
+  reviewedAt DateTime?
+  userId     Int
+
+  User       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
