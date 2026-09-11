@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
- Role {
+enum Role {
   STUDENT
   CLIENT
   ADMIN
@@ -42,7 +42,7 @@ model User {
   verificationStatus               VerificationStatus @default(PENDING)
   createdAt                        DateTime            @default(now())
 
-  Application  enum                    Application[]
+  Application  Application[]
   Job                              Job[]
   Message_Message_receiverIdToUser Message[]           @relation("Message_receiverIdToUser")
   Message_Message_senderIdToUser   Message[]           @relation("Message_senderIdToUser")
